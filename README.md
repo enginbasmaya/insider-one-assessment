@@ -1,1 +1,0 @@
-# insider-one-assessment
