@@ -17,6 +17,8 @@ jobs:
           php-version: '8.4'
           extensions: mbstring, pdo_sqlite, intl, bcmath, pcntl
           coverage: none
+      - name: Prepare Laravel directories
+        run: mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs
       - run: composer install --no-interaction --prefer-dist --no-progress
       - name: Syntax check
         run: find app routes tests -name '*.php' -print0 | xargs -0 -n1 php -l
