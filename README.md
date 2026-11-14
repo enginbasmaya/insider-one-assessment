@@ -1,6 +1,6 @@
 # Insider One — Event-Driven Notification System
 
-Laravel 11/12, PHP 8.3, MySQL 8.4 and Redis 7. This project implements an asynchronous notification API for SMS, Email and Push channels. `webhook.site` is used as the external provider simulator.
+Laravel 11/12, PHP 8.4, MySQL 8.4 and Redis 7. This project implements an asynchronous notification API for SMS, Email and Push channels. `webhook.site` is used as the external provider simulator.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ The repository tracks `.env.example`, not `.env`. For a GitHub clone, create you
 cp .env.example .env
 ```
 
-The `.env.example` includes development-only configuration and a provider simulation URL. Generate your own APP_KEY for any non-demo deployment. This project is an assessment demo, not a hardened public production service.
+The `.env.example` includes development-only configuration. Set `WEBHOOK_PROVIDER_URL` in `.env` to your own webhook.site URL and configure webhook.site to respond with HTTP 202. Generate a unique `APP_KEY` (`php artisan key:generate` inside the app container) for any non-demo deployment. This project is an assessment demo, not a hardened public production service.
 
 ## 2. Build and start all services
 
@@ -172,3 +172,19 @@ curl -i http://localhost:8000/api/health
 
 For the provider integration test, use the notification request in section 5 and check the configured webhook.site inbox. No manual queue-worker startup should be needed: the Compose project includes `app`, `mysql`, `redis`, `worker`, and `scheduler`.
 
+
+## OpenAPI specification
+
+The OpenAPI 3.0 specification is in [`docs/openapi.yaml`](docs/openapi.yaml). Import it into Swagger Editor, Swagger UI, Postman or a compatible API client.
+
+## Batch creation and replay semantics
+
+`POST /api/notifications/batch` accepts 1–1000 items. A duplicate `idempotency_key` **within the same request** is rejected (422). Keys already used by previous requests are returned as replays without re-enqueueing. The response includes `total`, `created_count`, and `replayed_count`. The batch record's `total_count` represents newly created notifications in that batch; replayed notifications retain their original batch association.
+
+## Continuous integration
+
+GitHub Actions runs PHP syntax checks and PHPUnit on pushes and pull requests (see `.github/workflows/tests.yml`). The workflow uses an isolated SQLite database and Redis service; it does not send real provider requests.
+
+## Verification boundaries
+
+The unit/feature suite verifies API behavior in isolation. Real 100-message-per-second throughput, cross-worker fairness and a successful 1000-item provider delivery run require separate load tests against a provider that permits the intended request rate. webhook.site may return HTTP 429 during bursts; that is a provider limit, not evidence of an application-level rate-limit violation.

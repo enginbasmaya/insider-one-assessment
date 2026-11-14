@@ -44,7 +44,7 @@ paths:
                   minItems: 1
                   maxItems: 1000
                   items: {$ref: '#/components/schemas/NotificationInput'}
-      responses: {'202': {description: Batch accepted}, '422': {description: Validation error}}
+      responses: {'202': {description: 'Batch accepted; response includes batch_id, total, created_count, replayed_count and notifications'}, '422': {description: 'Validation error, including duplicate idempotency keys within a batch'}}
   /notifications/{id}:
     get:
       summary: Get notification status
